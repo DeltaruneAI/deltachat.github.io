@@ -63,6 +63,15 @@
         body.bg-hidden::before {
             opacity: 0;
         }
+        
+        body.api-key-needed #chat-container,
+        body.api-key-needed #settings-button {
+            display: none;
+        }
+        body.api-key-needed::before {
+            opacity: 0.1;
+        }
+
 
         #chat-container {
             display: flex;
@@ -188,83 +197,6 @@
             border-color: var(--accent-color);
         }
         
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal-overlay.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-window {
-            background-color: black;
-            border: 2px solid white;
-            padding: 25px;
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-        }
-
-        .modal-window p {
-            margin: 0 0 15px 0;
-            font-size: 22px;
-        }
-        .modal-window a {
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-        .modal-window a:hover {
-            text-decoration: underline;
-        }
-        .modal-window .small-text {
-            font-size: 16px;
-            opacity: 0.8;
-        }
-
-        .modal-input {
-            width: 100%;
-            background-color: #000000;
-            border: 2px solid white;
-            color: var(--text-color);
-            padding: 10px 15px;
-            font-family: 'Determination Extended', 'VT323', monospace;
-            font-size: 18px;
-            outline: none;
-            margin-bottom: 20px;
-        }
-
-        .modal-button {
-            width: 100%;
-            background-color: black;
-            border: 2px solid white;
-            color: white;
-            padding: 10px;
-            font-family: 'Determination Extended', 'VT323', monospace;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        .modal-button:hover {
-            border-color: var(--accent-color);
-        }
-        .modal-error {
-            color: var(--error-color);
-            margin-top: 15px;
-            display: none;
-        }
-
         #settings-button {
             position: fixed;
             top: 15px;
@@ -279,6 +211,108 @@
             cursor: pointer;
         }
         
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background-color: black;
+            border: 2px solid white;
+            padding: 25px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+        
+        #api-key-modal {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #api-key-modal h2 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        #api-key-input {
+            width: 100%;
+            background-color: black;
+            border: 2px solid white;
+            color: white;
+            padding: 10px;
+            font-family: 'Determination Extended', 'VT323', monospace;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        #api-key-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        #api-key-confirm-btn {
+             width: 100%;
+            background-color: black;
+            border: 2px solid white;
+            color: white;
+            padding: 10px;
+            font-family: 'Determination Extended', 'VT323', monospace;
+            font-size: 20px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        #api-key-confirm-btn:hover {
+            border-color: var(--accent-color);
+        }
+        #api-key-confirm-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #api-key-modal .info-text {
+            font-size: 16px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        #api-key-modal .info-text a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        #api-key-error {
+            color: var(--error-color);
+            margin-top: -10px;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        .settings-section p {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+        }
         .settings-button {
             width: 100%;
             background-color: black;
@@ -316,21 +350,24 @@
     </style>
 </head>
 <body>
-    <div id="api-key-overlay" class="modal-overlay">
-        <div id="api-key-modal" class="modal-window">
-            <p>Введите API-ключ</p>
-            <input type="password" id="api-key-input" class="modal-input">
-            <button id="api-key-confirm-btn" class="modal-button">Подтвердить</button>
-            <p id="api-key-error" class="modal-error"></p>
-            <p class="small-text">Возьмите API-ключ из сайта<br><a href="https://aistudio.google.com/api_key" target="_blank">aistudio.google.com/api_key</a></p>
-            <p class="small-text">Это полностью бесплатно, и без лимит.</p>
+    <div id="api-key-overlay" class="overlay">
+        <div id="api-key-modal" class="modal">
+            <h2>Введите API-ключ</h2>
+            <input type="password" id="api-key-input" placeholder="Ваш ключ от Google AI Studio">
+            <p id="api-key-error"></p>
+            <button id="api-key-confirm-btn">Подтвердить</button>
+            <p class="info-text">
+                Возьмите API-ключ с сайта<br>
+                <a href="https://aistudio.google.com/api_key" target="_blank">aistudio.google.com/api_key</a>
+                <br><br>Это полностью бесплатно и безлимитно.
+            </p>
         </div>
     </div>
 
     <button id="settings-button">⚙️</button>
 
-    <div id="settings-overlay" class="modal-overlay">
-        <div id="settings-modal" class="modal-window">
+    <div id="settings-overlay" class="overlay">
+        <div id="settings-modal" class="modal">
             <div class="settings-section">
                 <p>Задний фон:</p>
                 <button id="bg-toggle-btn" class="settings-button">Включить</button>
@@ -355,8 +392,9 @@
     </div>
 
     <script>
-        let apiKey = null;
-        const model = 'gemini-1.5-flash'; // Using a fast model for validation
+        let apiKey = null; 
+        const model = 'gemini-1.5-flash';
+        const api = 'streamGenerateContent';
         const GIF_ANIMATION_DURATION = 3000;
 
         const chatBox = document.getElementById('chat-box');
@@ -382,6 +420,19 @@
             school: 'https://raw.githubusercontent.com/DeltaruneAI/deltachat.github.io/refs/heads/main/mus_school.ogg'
         };
 
+        const talkingSounds = {
+            ralsei: new Audio('https://raw.githubusercontent.com/DeltaruneAI/deltachat.github.io/refs/heads/main/ralsei-talk.mp3'),
+            susie: new Audio('https://raw.githubusercontent.com/DeltaruneAI/deltachat.github.io/refs/heads/main/susie-talk.mp3')
+        };
+        
+        // Настраиваем оба звука одинаково, используя стандартный loop.
+        Object.values(talkingSounds).forEach(sound => {
+            sound.loop = true;
+        });
+
+        let soundStopTimer = null;
+
+        // ВОЗВРАЩЕНО: Полный системный промпт на месте.
         let conversationHistory = [
             {
                 "role": "user",
@@ -400,52 +451,89 @@ Respond in the language the user is writing in. Default to Russian.
 `}]
             },
             { "role": "model", "parts": [{ "text": "Понял. Я буду отвечать в указанном формате, на языке пользователя, разбивать длинные сообщения и использовать дефисы в междометиях." }] },
+            { "role": "user", "parts": [{ "text": "Напиши в стиле Susie(Deltarune) сообщение:\n\n\"Крис, не иди туда\"" }] },
+            { "role": "model", "parts": [{ "text": "<susie><serious>КРИС, ТЫ КУДА?! НЕ ТУДА!" }] },
+            { "role": "user", "parts": [{ "text": "Отличный ответ.\n\nНапиши в стиле Ralsei(Deltarune) сообщение:\n\n\"Я съел конфету, ты будешь?" }] },
+            { "role": "model", "parts": [{ "text": "<ralsei><default>Ох, я съел конфету! Хочешь одну? У меня есть ещё!" }] },
+            { "role": "user", "parts": [{ "text": "Отличный ответ.\n\nНапишите в стиле Susie(Deltarune) сообщение:\n\n\"Давай зайдём к Ноэль завтра.\"" }] },
+            { "role": "model", "parts": [{ "text": "<susie><happy>Эй, Крис. Завтра к Ноэль зайдём." }] },
+            { "role": "user", "parts": [{ "text": "Отличный ответ.\n\nНапишите в стиле Ralsei(Deltarune) сообщение:\n\n\"Рассказывает Крису что лучше сначала пойти в дом, встретить мать\"" }] },
+            { "role": "model", "parts": [{ "text": "<ralsei><smiling>Крис, может, сначала зайдём домой? Твоя мама, наверное, ждёт!" }] },
+            {
+                "role": "user",
+                "parts": [{ "text": `
+Отличный ответ. Это был конец примеров. Ниже начнется реальный диалог. Используй Сьюзи или Ральзея когда нужно, а когда нужно используй их двоих, например:
+
+<susie><default>Я бы пошла в опасную дорогу, хехех.
+<ralsei><surprised>М-может нам пойти в безопасную дорогу!?!
+
+Иногда это может быть три диалога, используй с умом. Максимум 6 диалогов. Не пиши от лица Криса.
+`}]
+            },
+            { "role": "model", "parts": [{ "text": "Хорошо, Крис! Мы готовы. Что будем делать?" }] }
         ];
         
+        function stopAllTalkingSounds() {
+            if (soundStopTimer) clearTimeout(soundStopTimer);
+            Object.values(talkingSounds).forEach(sound => {
+                if (!sound.paused) {
+                    sound.pause();
+                    sound.currentTime = 0;
+                }
+            });
+        }
+
+        function playTalkingSound(character) {
+            const charKey = character.toLowerCase();
+            const soundToPlay = talkingSounds[charKey];
+
+            Object.entries(talkingSounds).forEach(([key, sound]) => {
+                if (key !== charKey && !sound.paused) {
+                    sound.pause();
+                    sound.currentTime = 0;
+                }
+            });
+
+            if (soundToPlay && soundToPlay.paused) {
+                soundToPlay.play().catch(e => console.error(`Sound play failed for ${charKey}:`, e));
+            }
+
+            if (soundStopTimer) clearTimeout(soundStopTimer);
+            soundStopTimer = setTimeout(stopAllTalkingSounds, GIF_ANIMATION_DURATION);
+        }
+
+
         function scrollToBottom() {
             setTimeout(() => {
-                chatBox.scrollTo({
-                    top: chatBox.scrollHeight,
-                    behavior: 'smooth'
-                });
+                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
             }, 50);
         }
 
         function displayMessage(text, character, expression, isUser = false) {
-            const characterMap = {
-                'kris': 'deltarune-kris',
-                'susie': 'deltarune-susie',
-                'ralsei': 'deltarune-ralsei'
-            };
+            if (!isUser) {
+                playTalkingSound(character);
+            }
+
+            const characterMap = { 'kris': 'deltarune-kris', 'susie': 'deltarune-susie', 'ralsei': 'deltarune-ralsei' };
             const charName = characterMap[character.toLowerCase()] || 'deltarune-kris';
             const encodedText = encodeURIComponent(text);
             const timestamp = new Date().getTime();
-            
             const baseUrl = `https://www.demirramon.com/gen/undertale_text_box`;
             const queryParams = `?text=${encodedText}&box=deltarune&character=${charName}&expression=${expression}&font=determination-ex&size=2&style=darkworld&unique=${timestamp}`;
-            
             const gifUrl = `${baseUrl}.gif${queryParams}`;
             const pngUrl = `${baseUrl}.png${queryParams}`;
-
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container', isUser ? 'user' : 'ai');
-
             const gifWrapper = document.createElement('div');
             gifWrapper.className = 'gif-wrapper';
-
             const animatedGif = document.createElement('img');
             animatedGif.className = 'message-gif';
             animatedGif.alt = `${character}: ${text}`;
-
             const staticImage = document.createElement('img');
             staticImage.className = 'static-image';
             staticImage.src = pngUrl;
-
-            animatedGif.onload = () => {
-                scrollToBottom();
-            };
+            animatedGif.onload = () => { scrollToBottom(); };
             animatedGif.src = gifUrl;
-
             gifWrapper.appendChild(animatedGif);
             gifWrapper.appendChild(staticImage);
             messageContainer.appendChild(gifWrapper);
@@ -460,9 +548,7 @@ Respond in the language the user is writing in. Default to Russian.
         const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
         function splitTextIntoChunks(text, limit) {
-            if (text.length <= limit) {
-                return [text];
-            }
+            if (text.length <= limit) return [text];
             const chunks = [];
             let remainingText = text;
             while (remainingText.length > 0) {
@@ -470,14 +556,9 @@ Respond in the language the user is writing in. Default to Russian.
                     chunks.push(remainingText);
                     break;
                 }
-                
                 let chunkSlice = remainingText.substring(0, limit);
                 let splitIndex = chunkSlice.lastIndexOf(' ');
-
-                if (splitIndex === -1) {
-                    splitIndex = limit;
-                }
-                
+                if (splitIndex === -1) splitIndex = limit;
                 chunks.push(remainingText.substring(0, splitIndex).trim());
                 remainingText = remainingText.substring(splitIndex).trim();
             }
@@ -487,15 +568,12 @@ Respond in the language the user is writing in. Default to Russian.
         async function processAndDisplayAIResponse(fullResponse) {
             const regex = /<(\w+)><(\w+)>(.*?)(?=<|$)/gs;
             const matches = [...fullResponse.matchAll(regex)];
-
             conversationHistory.push({ role: 'model', parts: [{ text: fullResponse }] });
-
             for (const match of matches) {
                 const [, character, reaction, text] = match;
                 const cleanedText = text.trim();
                 if (cleanedText) {
                     const textChunks = splitTextIntoChunks(cleanedText, 40);
-                    
                     for (const chunk of textChunks) {
                         await sleep(1500); 
                         displayMessage(chunk, character, reaction, false);
@@ -505,21 +583,14 @@ Respond in the language the user is writing in. Default to Russian.
         }
 
         async function getAIResponse() {
-            if (!apiKey) {
-                alert("API-ключ не установлен. Пожалуйста, введите ключ в настройках.");
-                return;
-            }
             thinkingIndicator.style.display = 'block';
             scrollToBottom();
+            stopAllTalkingSounds();
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${apiKey}&alt=sse`;
-
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${api}?key=${apiKey}&alt=sse`;
             const payload = {
                 "contents": conversationHistory,
-                "generationConfig": {
-                    "temperature": 0,
-                    "maxOutputTokens": 1024,
-                }
+                "generationConfig": { "temperature": 0, "maxOutputTokens": 1024 }
             };
 
             try {
@@ -528,19 +599,16 @@ Respond in the language the user is writing in. Default to Russian.
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} ${errorText}`);
                 }
-                
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullText = "";
-                
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
-                    
                     const chunk = decoder.decode(value);
                     const lines = chunk.split('\n');
                     for (const line of lines) {
@@ -555,14 +623,12 @@ Respond in the language the user is writing in. Default to Russian.
                         }
                     }
                 }
-                
                 thinkingIndicator.style.display = 'none';
                 if (fullText) {
                     await processAndDisplayAIResponse(fullText);
                 } else {
                      displayMessage("...они молчат.", "ralsei", "sad", false);
                 }
-
             } catch (error) {
                 console.error(error);
                 thinkingIndicator.style.display = 'none';
@@ -581,11 +647,117 @@ Respond in the language the user is writing in. Default to Russian.
             e.preventDefault();
             startMusicIfNeeded();
             const userText = messageInput.value.trim();
-
             if (userText) {
                 const userChunks = splitTextIntoChunks(userText, 40);
                 for (const chunk of userChunks) {
                     displayMessage(chunk, 'kris', 'default', true);
                 }
-                
-    
+                conversationHistory.push({ role: 'user', parts: [{ text: `<kris>${userText}` }] });
+                messageInput.value = '';
+                getAIResponse();
+            }
+        });
+
+        // --- ЛОГИКА НАСТРОЕК ---
+        function toggleSettings(visible) {
+            settingsOverlay.classList.toggle('visible', visible);
+        }
+
+        function applyBgSetting(isBgOn) {
+            document.body.classList.toggle('bg-hidden', !isBgOn);
+            bgToggleButton.textContent = isBgOn ? 'Выключить' : 'Включить';
+        }
+
+        function setMusicTrack(track) {
+            musicButtons.forEach(btn => btn.classList.remove('active'));
+            const targetButton = document.querySelector(`.settings-button[data-track="${track}"]`);
+            if (targetButton) targetButton.classList.add('active');
+            if (track && track !== 'off') {
+                const newSrc = musicTracks[track];
+                if (musicPlayer.src !== newSrc) musicPlayer.src = newSrc;
+                if (musicHasBeenStarted) musicPlayer.play().catch(e => console.error("Music play failed:", e));
+            } else {
+                musicPlayer.pause();
+                musicPlayer.src = '';
+            }
+        }
+
+        settingsButton.addEventListener('click', () => toggleSettings(true));
+        settingsOverlay.addEventListener('click', (e) => {
+            if (e.target === settingsOverlay) toggleSettings(false);
+        });
+
+        bgToggleButton.addEventListener('click', () => {
+            startMusicIfNeeded();
+            const isBgCurrentlyOn = !document.body.classList.contains('bg-hidden');
+            applyBgSetting(!isBgCurrentlyOn);
+            localStorage.setItem('deltachat_bg_on', !isBgCurrentlyOn);
+        });
+
+        musicButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                startMusicIfNeeded();
+                const track = button.dataset.track;
+                setMusicTrack(track);
+                localStorage.setItem('deltachat_music_track', track);
+            });
+        });
+
+        // --- ЛОГИКА API КЛЮЧА ---
+        async function validateApiKey(keyToTest) {
+            apiKeyError.textContent = '';
+            apiKeyConfirmBtn.disabled = true;
+            apiKeyConfirmBtn.textContent = 'Проверка...';
+            const validationUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyToTest}`;
+            try {
+                const response = await fetch(validationUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "contents": [{"parts":[{"text": "привет"}]}] })
+                });
+                if (response.ok) {
+                    apiKey = keyToTest;
+                    localStorage.setItem('deltachat_api_key', keyToTest);
+                    apiKeyOverlay.classList.remove('visible');
+                    document.body.classList.remove('api-key-needed');
+                } else {
+                    apiKeyError.textContent = 'Ошибка, кажись. Проверьте ключ.';
+                    apiKeyConfirmBtn.disabled = false;
+                    apiKeyConfirmBtn.textContent = 'Подтвердить';
+                }
+            } catch (error) {
+                console.error("Validation Error:", error);
+                apiKeyError.textContent = 'Ошибка сети. Попробуйте снова.';
+                apiKeyConfirmBtn.disabled = false;
+                apiKeyConfirmBtn.textContent = 'Подтвердить';
+            }
+        }
+
+        apiKeyConfirmBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                validateApiKey(key);
+            } else {
+                apiKeyError.textContent = 'Поле не может быть пустым.';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedBgOn = localStorage.getItem('deltachat_bg_on') !== 'false';
+            const savedMusicTrack = localStorage.getItem('deltachat_music_track') || 'noelle';
+            applyBgSetting(savedBgOn);
+            setMusicTrack(savedMusicTrack);
+
+            const savedApiKey = localStorage.getItem('deltachat_api_key');
+            if (savedApiKey) {
+                apiKey = savedApiKey;
+                document.body.classList.remove('api-key-needed');
+            } else {
+                document.body.classList.add('api-key-needed');
+                apiKeyOverlay.classList.add('visible');
+            }
+        });
+
+    </script>
+</body>
+</html>
