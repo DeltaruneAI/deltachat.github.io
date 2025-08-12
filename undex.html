@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deltarune Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Determination Extended';
+            src: url('https://raw.githubusercontent.com/DeltaruneAI/deltachat.github.io/refs/heads/main/determination-extended.otf') format('opentype');
+        }
+
+        :root {
+            --text-color: #ffffff;
+            --border-color: #444;
+            --accent-color: #4a90e2;
+            --thinking-bg: #2b2b2b;
+            --error-color: #ff5555;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Determination Extended', 'VT323', monospace;
+            background-color: #000;
+            color: var(--text-color);
+            font-size: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            
+            background-image: url('https://raw.githubusercontent.com/DeltaruneAI/deltachat.github.io/refs/heads/main/kEYtLgC.gif');
+            background-repeat: no-repeat;
+            background-position: calc(50% + 13.4px) center;
+            background-size: cover;
+            background-attachment: fixed;
+            
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        body.bg-hidden::before {
+            opacity: 0;
+        }
+        
+        /* Стили для скрытия UI, пока нет ключа */
+        body.api-key-needed #chat-container,
+        body.api-key-needed #settings-button {
+            display: none;
+        }
+        body.api-key-needed::before {
+            opacity: 0.1; /* Делаем фон еще темнее */
+        }
+
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: transparent;
+        }
+
+        #chat-box {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 25px 20px 10px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            background-color: transparent;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) #000;
+        }
+
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 95%;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        .message-container.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message-container.ai {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .gif-wrapper {
+            position: relative;
+        }
+
+        .message-gif {
+            max-width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            display: block;
+        }
+
+        .static-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            max-width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #thinking-indicator {
+            padding: 10px 20px;
+            margin: 10px 0;
+            align-self: flex-start;
+            animation: pulse 1.5s infinite;
+            background-color: var(--thinking-bg);
+            border-radius: 5px;
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        #message-form {
+            flex-shrink: 0;
+            display: flex;
+            padding: 15px;
+            border-top: 2px solid var(--border-color);
+            background-color: #000000;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            background-color: #000000;
+            border: 2px solid white;
+            color: var(--text-color);
+            padding: 10px 15px;
+            font-family: 'Determination Extended', 'VT323', monospace;
+            font-size: 22px;
+            outline: none;
+        }
+
+        #message-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        #send-button {
+            background-color: black;
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 22px;
+            font-weight: bold;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        #send-button:hover {
+            background-color: #222222;
+            border-color: var(--accent-color);
+        }
+        
+        #settings-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            background-color: black;
+            border: 2px solid white;
+            color: white;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Сделали фон темнее */
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background-color: black;
+            border: 2px solid white;
+            padding: 25px;
+            width: 90%;
+            max-width: 450px; /* Немного увеличили для текста */
+            text-align: center;
+        }
+        
+        /* Стили для модального окна API ключа */
+        #api-key-modal {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #api-key-modal h2 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        #api-key-input {
+            width: 100%;
+            background-color: black;
+            border: 2px solid white;
+            color: white;
+            padding: 10px;
+            font-family: 'Determination Extended', 'VT323', monospace;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        #api-key-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        #api-key-confirm-btn {
+             width: 100%;
+            background-color: black;
+            border: 2px solid white;
+            color: white;
+            padding: 10px;
+            font-family: 'Determination Extended', 'VT323', monospace;
+            font-size: 20px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        #api-key-confirm-btn:hover {
+            border-color: var(--accent-color);
+        }
+        #api-key-confirm-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #api-key-modal .info-text {
+            font-size: 16px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        #api-key-modal .info-text a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        #api-key-error {
+            color: var(--error-color);
+            margin-top: -10px;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        /* Стили для окна настроек */
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        .settings-section p {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+        }
+        .settings-button {
+            width: 100%;
+            background-color: black;
+            border: 2px solid white;
+            color: white;
+            padding: 10px;
+            font-family: 'Determination Extended', 'VT323', monospace;
+            font-size: 20px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .settings-button.active {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 800px) {
+            #chat-box {
+                border-left: none;
+                border-right: none;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                font-size: 18px;
+            }
+            #message-input, #send-button, #settings-button {
+                font-size: 18px;
+            }
+            #settings-button {
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- НОВОЕ: Модальное окно для API ключа -->
+    <div id="api-key-overlay" class="overlay">
+        <div id="api-key-modal" class="modal">
+            <h2>Введите API-ключ</h2>
+            <input type="password" id="api-key-input" placeholder="Ваш ключ от Google AI Studio">
+            <p id="api-key-error"></p>
+            <button id="api-key-confirm-btn">Подтвердить</button>
+            <p class="info-text">
+                Возьмите API-ключ с сайта<br>
+                <a href="https://aistudio.google.com/api_key" target="_blank">aistudio.google.com/api_key</a>
+                <br><br>Это полностью бесплатно и безлимитно.
+            </p>
+        </div>
+    </div>
+
+    <button id="settings-button">⚙️</button>
+
+    <div id="settings-overlay" class="overlay">
+        <div id="settings-modal" class="modal">
+            <div class="settings-section">
+                <p>Задний фон:</p>
+                <button id="bg-toggle-btn" class="settings-button">Включить</button>
+            </div>
+            <div class="settings-section">
+                <p>Музыка:</p>
+                <button class="settings-button" data-track="noelle">Дом Ноэль</button>
+                <button class="settings-button" data-track="school">Школа</button>
+                <button class="settings-button" data-track="off">Выключить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-box">
+        </div>
+        <div id="thinking-indicator">Думают...</div>
+        <form id="message-form">
+            <input type="text" id="message-input" placeholder="Написать..." autocomplete="off">
+            <button type="submit" id="send-button">►</button>
+        </form>
+    </div>
+
+    <script>
+        // ИЗМЕНЕНО: Ключ теперь не здесь
+        let apiKey = null; 
+        const model = 'gemini-1.5-flash'; // Используем 1.5 Flash, он лучше и дешевле
+        const api = 'streamGenerateContent';
+        const GIF_ANIMATION_DURATION = 3000;
+
+        const chatBox = document.getElementById('chat-box');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const thinkingIndicator = document.getElementById('thinking-indicator');
+        
+        const settingsButton = document.getElementById('settings-button');
+        const settingsOverlay = document.getElementById('settings-overlay');
+        const bgToggleButton = document.getElementById('bg-toggle-btn');
+        const musicButtons = document.querySelectorAll('.settings-button[data-track]');
+
+        // НОВОЕ: Элементы для модального окна API
+        const apiKeyOverlay = document.getElementById('api-key-overlay');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKeyConfirmBtn = document.getElementById('api-key-confirm-btn');
+        const apiKeyError = document.getElementById('api-key-error');
+
+        const musicPlayer = new Audio();
+        musicPlayer.loop = true;
+        let musicHasBeenStarted = false;
+        const musicTracks = {
+            noelle: 'https://raw.githubusercontent.com/DeltaruneAI/deltachat.github.io/refs/heads/main/noelle_house_wip.ogg',
+            school: 'https://raw.githubusercontent.com/DeltaruneAI/deltachat.github.io/refs/heads/main/mus_school.ogg'
+        };
+
+        let conversationHistory = [
+            // ... (вся ваша история промптов остается без изменений)
+            { "role": "user", "parts": [{ "text": `MAX_LETTERS_LIMIT = 40\nGAME = "Deltarune"\nCHARACTERS = ["Kris", "Susie", "Ralsei"]\nKris = "User"\nSUSIE_REACTIONS = ["default","suspicious","serious","pissed","surprised","happy","stare","proud","drooling","looking-back"]\nRALSEI_REACTIONS = ["default","surprised","shocked","angry","happy","smiling","sad","serious","trauma","hopeless"]\n\nUse these reactions to show their face.\nSplit long messages into multiple parts, each under 40 characters.\nUse hyphens for interjections, for example: "пф-ф", not "пфф".\nRespond in the language the user is writing in. Default to Russian.`}] },
+            { "role": "model", "parts": [{ "text": "Понял. Я буду отвечать в указанном формате, на языке пользователя, разбивать длинные сообщения и использовать дефисы в междометиях." }] },
+            { "role": "user", "parts": [{ "text": "Напиши в стиле Susie(Deltarune) сообщение:\n\n\"Крис, не иди туда\"" }] },
+            { "role": "model", "parts": [{ "text": "<susie><serious>КРИС, ТЫ КУДА?! НЕ ТУДА!" }] },
+            { "role": "user", "parts": [{ "text": "Отличный ответ.\n\nНапиши в стиле Ralsei(Deltarune) сообщение:\n\n\"Я съел конфету, ты будешь?" }] },
+            { "role": "model", "parts": [{ "text": "<ralsei><default>Ох, я съел конфету! Хочешь одну? У меня есть ещё!" }] },
+            { "role": "user", "parts": [{ "text": "Отличный ответ.\n\nНапишите в стиле Susie(Deltarune) сообщение:\n\n\"Давай зайдём к Ноэль завтра.\"" }] },
+            { "role": "model", "parts": [{ "text": "<susie><happy>Эй, Крис. Завтра к Ноэль зайдём." }] },
+            { "role": "user", "parts": [{ "text": "Отличный ответ.\n\nНапишите в стиле Ralsei(Deltarune) сообщение:\n\n\"Рассказывает Крису что лучше сначала пойти в дом, встретить мать\"" }] },
+            { "role": "model", "parts": [{ "text": "<ralsei><smiling>Крис, может, сначала зайдём домой? Твоя мама, наверное, ждёт!" }] },
+            { "role": "user", "parts": [{ "text": `Отличный ответ. Это был конец примеров. Ниже начнется реальный диалог. Используй Сьюзи или Ральзея когда нужно, а когда нужно используй их двоих, например:\n\n<susie><default>Я бы пошла в опасную дорогу, хехех.\n<ralsei><surprised>М-может нам пойти в безопасную дорогу!?! \n\nИногда это может быть три диалога, используй с умом. Максимум 6 диалогов. Не пиши от лица Криса.`}] },
+            { "role": "model", "parts": [{ "text": "Хорошо, Крис! Мы готовы. Что будем делать?" }] }
+        ];
+        
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+            }, 50);
+        }
+
+        function displayMessage(text, character, expression, isUser = false) {
+            const characterMap = { 'kris': 'deltarune-kris', 'susie': 'deltarune-susie', 'ralsei': 'deltarune-ralsei' };
+            const charName = characterMap[character.toLowerCase()] || 'deltarune-kris';
+            const encodedText = encodeURIComponent(text);
+            const timestamp = new Date().getTime();
+            const baseUrl = `https://www.demirramon.com/gen/undertale_text_box`;
+            const queryParams = `?text=${encodedText}&box=deltarune&character=${charName}&expression=${expression}&font=determination-ex&size=2&style=darkworld&unique=${timestamp}`;
+            const gifUrl = `${baseUrl}.gif${queryParams}`;
+            const pngUrl = `${baseUrl}.png${queryParams}`;
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container', isUser ? 'user' : 'ai');
+            const gifWrapper = document.createElement('div');
+            gifWrapper.className = 'gif-wrapper';
+            const animatedGif = document.createElement('img');
+            animatedGif.className = 'message-gif';
+            animatedGif.alt = `${character}: ${text}`;
+            const staticImage = document.createElement('img');
+            staticImage.className = 'static-image';
+            staticImage.src = pngUrl;
+            animatedGif.onload = () => { scrollToBottom(); };
+            animatedGif.src = gifUrl;
+            gifWrapper.appendChild(animatedGif);
+            gifWrapper.appendChild(staticImage);
+            messageContainer.appendChild(gifWrapper);
+            chatBox.appendChild(messageContainer);
+            setTimeout(() => {
+                animatedGif.style.visibility = 'hidden';
+                staticImage.style.display = 'block';
+            }, GIF_ANIMATION_DURATION);
+        }
+
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        function splitTextIntoChunks(text, limit) {
+            if (text.length <= limit) return [text];
+            const chunks = [];
+            let remainingText = text;
+            while (remainingText.length > 0) {
+                if (remainingText.length <= limit) {
+                    chunks.push(remainingText);
+                    break;
+                }
+                let chunkSlice = remainingText.substring(0, limit);
+                let splitIndex = chunkSlice.lastIndexOf(' ');
+                if (splitIndex === -1) splitIndex = limit;
+                chunks.push(remainingText.substring(0, splitIndex).trim());
+                remainingText = remainingText.substring(splitIndex).trim();
+            }
+            return chunks.filter(chunk => chunk.length > 0);
+        }
+
+        async function processAndDisplayAIResponse(fullResponse) {
+            const regex = /<(\w+)><(\w+)>(.*?)(?=<|$)/gs;
+            const matches = [...fullResponse.matchAll(regex)];
+            conversationHistory.push({ role: 'model', parts: [{ text: fullResponse }] });
+            for (const match of matches) {
+                const [, character, reaction, text] = match;
+                const cleanedText = text.trim();
+                if (cleanedText) {
+                    const textChunks = splitTextIntoChunks(cleanedText, 40);
+                    for (const chunk of textChunks) {
+                        await sleep(1500); 
+                        displayMessage(chunk, character, reaction, false);
+                    }
+                }
+            }
+        }
+
+        async function getAIResponse() {
+            thinkingIndicator.style.display = 'block';
+            scrollToBottom();
+
+            // ИЗМЕНЕНО: URL формируется здесь, с использованием подтвержденного ключа
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${api}?key=${apiKey}&alt=sse`;
+
+            const payload = {
+                "contents": conversationHistory,
+                "generationConfig": { "temperature": 0, "maxOutputTokens": 1024 }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} ${errorText}`);
+                }
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = "";
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const jsonStr = line.substring(6);
+                            try {
+                                const data = JSON.parse(jsonStr);
+                                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                                    fullText += data.candidates[0].content.parts[0].text;
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+                thinkingIndicator.style.display = 'none';
+                if (fullText) {
+                    await processAndDisplayAIResponse(fullText);
+                } else {
+                     displayMessage("...они молчат.", "ralsei", "sad", false);
+                }
+            } catch (error) {
+                console.error(error);
+                thinkingIndicator.style.display = 'none';
+                displayMessage("Что-то пошло не так с нашим соединением... Попробуем позже?", "ralsei", "trauma", false);
+            }
+        }
+
+        function startMusicIfNeeded() {
+            if (!musicHasBeenStarted && musicPlayer.src) {
+                musicPlayer.play().catch(e => console.error("Music play failed:", e));
+                musicHasBeenStarted = true;
+            }
+        }
+
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            startMusicIfNeeded();
+            const userText = messageInput.value.trim();
+            if (userText) {
+                const userChunks = splitTextIntoChunks(userText, 40);
+                for (const chunk of userChunks) {
+                    displayMessage(chunk, 'kris', 'default', true);
+                }
+                conversationHistory.push({ role: 'user', parts: [{ text: `<kris>${userText}` }] });
+                messageInput.value = '';
+                getAIResponse();
+            }
+        });
+
+        // --- ЛОГИКА НАСТРОЕК ---
+        function toggleSettings(visible) {
+            settingsOverlay.classList.toggle('visible', visible);
+        }
+
+        function applyBgSetting(isBgOn) {
+            document.body.classList.toggle('bg-hidden', !isBgOn);
+            bgToggleButton.textContent = isBgOn ? 'Выключить' : 'Включить';
+        }
+
+        function setMusicTrack(track) {
+            musicButtons.forEach(btn => btn.classList.remove('active'));
+            const targetButton = document.querySelector(`.settings-button[data-track="${track}"]`);
+            if (targetButton) targetButton.classList.add('active');
+            if (track && track !== 'off') {
+                const newSrc = musicTracks[track];
+                if (musicPlayer.src !== newSrc) musicPlayer.src = newSrc;
+                if (musicHasBeenStarted) musicPlayer.play().catch(e => console.error("Music play failed:", e));
+            } else {
+                musicPlayer.pause();
+                musicPlayer.src = '';
+            }
+        }
+
+        settingsButton.addEventListener('click', () => toggleSettings(true));
+        settingsOverlay.addEventListener('click', (e) => {
+            if (e.target === settingsOverlay) toggleSettings(false);
+        });
+
+        bgToggleButton.addEventListener('click', () => {
+            startMusicIfNeeded();
+            const isBgCurrentlyOn = !document.body.classList.contains('bg-hidden');
+            applyBgSetting(!isBgCurrentlyOn);
+            localStorage.setItem('deltachat_bg_on', !isBgCurrentlyOn);
+        });
+
+        musicButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                startMusicIfNeeded();
+                const track = button.dataset.track;
+                setMusicTrack(track);
+                localStorage.setItem('deltachat_music_track', track);
+            });
+        });
+
+        // --- НОВАЯ ЛОГИКА: ПРОВЕРКА И ВАЛИДАЦИЯ API КЛЮЧА ---
+        async function validateApiKey(keyToTest) {
+            apiKeyError.textContent = '';
+            apiKeyConfirmBtn.disabled = true;
+            apiKeyConfirmBtn.textContent = 'Проверка...';
+
+            // Для проверки используем более простой метод generateContent
+            const validationUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyToTest}`;
+            
+            try {
+                const response = await fetch(validationUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "contents": [{"parts":[{"text": "привет"}]}] })
+                });
+
+                if (response.ok) {
+                    // Успех!
+                    apiKey = keyToTest;
+                    localStorage.setItem('deltachat_api_key', keyToTest);
+                    apiKeyOverlay.classList.remove('visible');
+                    document.body.classList.remove('api-key-needed');
+                } else {
+                    // Ошибка
+                    apiKeyError.textContent = 'Ошибка, кажись. Проверьте ключ.';
+                    apiKeyConfirmBtn.disabled = false;
+                    apiKeyConfirmBtn.textContent = 'Подтвердить';
+                }
+            } catch (error) {
+                // Сетевая ошибка
+                console.error("Validation Error:", error);
+                apiKeyError.textContent = 'Ошибка сети. Попробуйте снова.';
+                apiKeyConfirmBtn.disabled = false;
+                apiKeyConfirmBtn.textContent = 'Подтвердить';
+            }
+        }
+
+        apiKeyConfirmBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                validateApiKey(key);
+            } else {
+                apiKeyError.textContent = 'Поле не может быть пустым.';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Загрузка настроек
+            const savedBgOn = localStorage.getItem('deltachat_bg_on') !== 'false';
+            const savedMusicTrack = localStorage.getItem('deltachat_music_track') || 'noelle';
+            applyBgSetting(savedBgOn);
+            setMusicTrack(savedMusicTrack);
+
+            // Проверка наличия API ключа
+            const savedApiKey = localStorage.getItem('deltachat_api_key');
+            if (savedApiKey) {
+                apiKey = savedApiKey;
+                document.body.classList.remove('api-key-needed');
+            } else {
+                document.body.classList.add('api-key-needed');
+                apiKeyOverlay.classList.add('visible');
+            }
+        });
+
+    </script>
+</body>
+</html>
