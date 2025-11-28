@@ -1,4 +1,4 @@
-#profile-title: Мифик VPN
+#profile-title: XmasVPN
 #profile-update-interval: 1
 #announce: Лучший ВПН!
 #subscription-userinfo: upload=0; download=0; total=1125899906842624; expire=4102444800
