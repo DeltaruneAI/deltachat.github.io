@@ -1,6 +1,6 @@
-#profile-title: XmasVPN
+#profile-title: Мифик VPN
 #profile-update-interval: 1
 #announce: Лучший ВПН!
-#support-url: https://t.me/happ_chat
+#subscription-userinfo: upload=0; download=0; total=1125899906842624; expire=4102444800
 
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTplNE1fcE1lMHVRSEppdXlHRGpNclhB@212.111.86.14:422#%F0%9F%87%B8%F0%9F%87%AA%20Sweden%20Xmas
