@@ -1,0 +1,5 @@
+#profile-title: PopaVPN Secure
+#profile-update-interval: 1
+#support-url: https://google.com
+
+ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTplNE1fcE1lMHVRSEppdXlHRGpNclhB@212.111.86.14:422#%F0%9F%87%BA%F0%9F%87%B8%20PopaVPN%20Secure?serverDescription=Q29vbCBWUE4=
